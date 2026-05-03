@@ -34,3 +34,18 @@ def load_vector_store() -> FAISS:
         allow_dangerous_deserialization=True
     )
 
+
+def similarity_search(query: str ,k:int = 5, filters: dict = None):
+    store = load_vector_store()
+
+    if filter:
+        results = store.similarity_search(
+            query,k=k,
+            filter=filters
+        )
+    else:
+        results = store.similarity_search(
+            query,k=k
+        )
+    
+    return results
