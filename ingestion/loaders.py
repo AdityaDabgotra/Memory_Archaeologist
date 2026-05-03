@@ -5,7 +5,7 @@ from langchain_community.document_loaders import (
     UnstructuredMarkdownLoader
 )
 
-from langchain.schema import Document
+from langchain_core.documents import Document
 from pathlib import Path
 from datetime import datetime
 import os
