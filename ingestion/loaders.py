@@ -50,3 +50,34 @@ def infer_source_type(filepath:str)->str:
         return "book_highlight"
     return "document"
 
+
+def load_file(filepath:str)->list[Document]:
+    ext = Path(filepath).suffix.lower()
+    loader_class = LOADER_MAP.get(ext)
+
+    if not loader_class:
+        print(f"Skipping unsupported file type :{filepath}")
+        return[]
+    
+    try:
+        loader = loader_class(filepath)
+        docs = loader.load()
+    except Exception as e:
+        print(f"Failed to load {filepath}: {e}")
+        return []
+    
+    date = infer_date_from_path(filepath)
+    source_type = infer_source_type(filepath)
+    filename = Path(filepath).name
+
+    for doc in docs:
+        doc.metadata.update({
+            "source":      filepath,
+            "filename":    filename,
+            "source_type": source_type,
+            "date":        date,
+            "year":        date[:4],
+            "month":       date[:7],
+        })
+    
+    return docs
