@@ -69,4 +69,13 @@ class MemoryGraphStore:
             """, {"person": person.strip(),
                   "doc_id": doc_id, "date": date})
     
+    def link_related_documents(self, doc_id_1: str, doc_id_2: str, shared_concept: str):
+        with self.driver.session() as session:
+            session.run("""
+                MATCH (d1:Document {id: $id1})
+                MATCH (d2:Document {id: $id2})
+                MERGE (d1)-[:RELATED_TO {via: $concept}]->(d2)
+            """, {"id1": doc_id_1, "id2": doc_id_2,
+                  "concept": shared_concept})
+    
     
