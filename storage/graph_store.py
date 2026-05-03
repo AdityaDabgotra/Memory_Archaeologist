@@ -30,4 +30,26 @@ class MemoryGraphStore:
             session.run("CREATE INDEX person_name IF NOT EXISTS FOR (p:Person) ON (p.name)")
         print("Graph indexes created")
     
+    def add_document_node(self,doc: Document,chunk_id:str):
+        with self.driver.session() as session:
+            session.run("""
+                MERGE (d:Document {id: $id})
+                SET d.content    = $content,
+                    d.source     = $source,
+                    d.filename   = $filename,
+                    d.date       = $date,
+                    d.year       = $year,
+                    d.month      = $month,
+                    d.source_type = $source_type
+            """, {
+                "id":          chunk_id,
+                "content":     doc.page_content[:500],
+                "source":      doc.metadata.get("source", ""),
+                "filename":    doc.metadata.get("filename", ""),
+                "date":        doc.metadata.get("date", ""),
+                "year":        doc.metadata.get("year", ""),
+                "month":       doc.metadata.get("month", ""),
+                "source_type": doc.metadata.get("source_type", "document"),
+            })
+    
     
