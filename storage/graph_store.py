@@ -1,10 +1,7 @@
-load_dotenv()
-
 from neo4j import GraphDatabase
 from langchain_core.documents import Document
 from dotenv import load_dotenv
 import os
-
 
 load_dotenv()
 
@@ -52,4 +49,13 @@ class MemoryGraphStore:
                 "source_type": doc.metadata.get("source_type", "document"),
             })
     
+    def add_concept(self,concept:str,doc_id:str,date:str):
+        with self.driver.session() as session:
+            session.run("""
+                MERGE (c:Concept {name: $concept})
+                WITH c
+                MATCH (d:Document {id: $doc_id})
+                MERGE (d)-[:CONTAINS_IDEA {date: $date}]->(c)
+            """, {"concept": concept.lower().strip(),
+                  "doc_id": doc_id, "date": date})
     
