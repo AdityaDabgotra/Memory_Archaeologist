@@ -23,4 +23,11 @@ class MemoryGraphStore:
            session.run("MATCH (n) DETACH DELETE n")
         print("Graph cleared")
     
+    def create_indexes(self):
+        with self.driver.session() as session:
+            session.run("CREATE INDEX doc_id IF NOT EXISTS FOR (d:Document) ON (d.id)")
+            session.run("CREATE INDEX concept_name IF NOT EXISTS FOR (c:Concept) ON (c.name)")
+            session.run("CREATE INDEX person_name IF NOT EXISTS FOR (p:Person) ON (p.name)")
+        print("Graph indexes created")
+    
     
