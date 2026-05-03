@@ -78,4 +78,14 @@ class MemoryGraphStore:
             """, {"id1": doc_id_1, "id2": doc_id_2,
                   "concept": shared_concept})
     
+    def get_concept_timeline(self,concept:str) -> list:
+        with self.driver.session() as session:
+            result = session.run("""
+                MATCH (d:Document)-[:CONTAINS_IDEA]->(c:Concept {name: $concept})
+                RETURN d.date AS date, d.filename AS file,
+                       d.content AS content, d.source_type AS type
+                ORDER BY d.date ASC
+            """, {"concept": concept.lower().strip()})
+            return [dict(r) for r in result]
+    
     
