@@ -98,4 +98,11 @@ class MemoryGraphStore:
             """, {"person": person.strip()})
             return [dict(r) for r in result]
     
-    
+    def get_all_concepts(self) -> list:
+        with self.driver.session() as session:
+            result = session.run("""
+                MATCH (d:Document)-[:CONTAINS_IDEA]->(c:Concept)
+                RETURN c.name AS concept, count(d) AS frequency
+                ORDER BY frequency DESC
+            """)
+            return [dict(r) for r in result]
