@@ -88,4 +88,14 @@ class MemoryGraphStore:
             """, {"concept": concept.lower().strip()})
             return [dict(r) for r in result]
     
+    def get_person_timeline(self,person:str) -> list:
+        with self.driver.session() as session:
+            result = session.run("""
+                MATCH (d:Document)-[:MENTIONS]->(p:Person {name: $person})
+                RETURN d.date AS date, d.filename AS file,
+                       d.content AS content
+                ORDER BY d.date ASC
+            """, {"person": person.strip()})
+            return [dict(r) for r in result]
+    
     
