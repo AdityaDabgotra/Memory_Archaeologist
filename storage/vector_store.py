@@ -25,3 +25,12 @@ def build_vector_store(chunks : list[Document]) -> FAISS:
     print(f"Vector Store saved to {VECTOR_STORE_PATH}")
     return vector_store
 
+
+def load_vector_store() -> FAISS:
+    embeddings = get_embeddings()
+    return FAISS.load_local(
+        VECTOR_STORE_PATH,
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+
