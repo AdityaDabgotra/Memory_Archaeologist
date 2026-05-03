@@ -37,3 +37,16 @@ def infer_date_from_path(filepath:str)->str:
     return datetime.fromtimestamp(mod_time).strftime("%Y-%m-%d")
 
 
+def infer_source_type(filepath:str)->str:
+    path_lower = filepath.lower()
+
+    if any(k in path_lower for k in ["journal", "diary", "daily"]):
+        return "journal"
+    if any(k in path_lower for k in ["email", "mail", "gmail"]):
+        return "email"
+    if any(k in path_lower for k in ["note", "notes", "obsidian", "notion"]):
+        return "note"
+    if any(k in path_lower for k in ["book", "highlight", "kindle"]):
+        return "book_highlight"
+    return "document"
+
