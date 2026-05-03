@@ -59,3 +59,14 @@ class MemoryGraphStore:
             """, {"concept": concept.lower().strip(),
                   "doc_id": doc_id, "date": date})
     
+    def add_person(self,person:str, doc_id:str, date: str):
+        with self.driver.session() as session:
+            session.run("""
+                MERGE (p:Person {name: $person})
+                WITH p
+                MATCH (d:Document {id: $doc_id})
+                MERGE (d)-[:MENTIONS {date: $date}]->(p)
+            """, {"person": person.strip(),
+                  "doc_id": doc_id, "date": date})
+    
+    
