@@ -81,3 +81,18 @@ def load_file(filepath:str)->list[Document]:
         })
     
     return docs
+
+
+def load_directory(directory:str) -> list[Document]:
+    all_docs = []
+    supported_exts = set(LOADER_MAP.keys())
+
+    for path in Path(directory).rglob("*"):
+        if path.suffix.lower() in supported_exts:
+            print(f"Loading {path.name}")
+            docs = load_file(str(path))
+            all_docs.extend(docs)
+    
+    print(f"/nLoaded {len(all_docs)} document pages from {directory}")
+
+    return all_docs
