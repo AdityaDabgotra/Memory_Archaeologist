@@ -13,3 +13,15 @@ def get_embeddings():
     return HuggingFaceEmbeddings(
         model_name = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     )
+
+
+def build_vector_store(chunks : list[Document]) -> FAISS:
+    print("Embedding chunks (this may take a minute) ...")
+    embeddings = get_embeddings()
+    vector_store = FAISS.from_documents(chunks,embeddings)
+
+    os.makedirs(VECTOR_STORE_PATH,exist_ok=True)
+    vector_store.save_local(VECTOR_STORE_PATH)
+    print(f"Vector Store saved to {VECTOR_STORE_PATH}")
+    return vector_store
+
