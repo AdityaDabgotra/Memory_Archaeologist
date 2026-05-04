@@ -1,4 +1,4 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import HuggingFaceEndpoint,ChatHuggingFace
 from agents.state import AgentState
 from storage.vector_store import similarity_search
 from dotenv import load_dotenv
@@ -6,11 +6,11 @@ import os
 
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(
-    model = os.getenv("LLM_MODEL", "gemini-2.5-flash"),
-    temperature = 0.3
+model = HuggingFaceEndpoint(
+    repo_id="Qwen/Qwen2.5-7B-Instruct",
+    task="text-generation"
 )
-
+llm = model = ChatHuggingFace(llm=model,temperature = 0.3)
 
 def contrast_agent(state:AgentState) ->AgentState:
     query = state["query"]

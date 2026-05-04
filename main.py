@@ -6,6 +6,11 @@ from ingestion.chunker import chunk_documents
 from storage.vector_store import build_vector_store, similarity_search
 from ingestion.graph_builder import build_graph
 from storage.graph_store import MemoryGraphStore
+from ingestion.loaders import load_directory
+from ingestion.chunker import chunk_documents
+from storage.vector_store import build_vector_store
+from ingestion.graph_builder import build_graph
+from agents.graph_pipeline import ask
 
 
 def ingest(directory: str = "data/sample"):
@@ -63,6 +68,33 @@ def debug_chunks():
         print(f"  Length: {len(chunk.page_content)}")
         print(f"  Preview: {chunk.page_content[:60]}")
 
+
+def ingest(directory: str = "data/sample"):
+    docs   = load_directory(directory)
+    chunks = list(chunk_documents(docs))
+    build_vector_store(chunks)
+    build_graph(chunks)
+
+
+def chat():
+    print("\n🏺 Memory Archaeologist — Agent System")
+    print("Type 'quit' to exit\n")
+
+    test_queries = [
+        "What was I thinking about starting a business?",
+        "How did my startup idea evolve over time?",
+        "Have I ever contradicted myself about my career?",
+        "What ideas did I mention but never follow up on?",
+    ]
+
+    for query in test_queries:
+        answer = ask(query)
+        print(f"\n💬 Answer:\n{answer}")
+        print("\n" + "—"*50)
+
+
+
 if __name__ == "__main__":
-    debug_chunks()
-    ingest()
+    # debug_chunks()
+    # ingest()
+    chat()

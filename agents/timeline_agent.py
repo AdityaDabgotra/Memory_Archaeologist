@@ -1,4 +1,4 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import ChatHuggingFace,HuggingFaceEndpoint
 from agents.state import AgentState
 from storage.graph_store import MemoryGraphStore
 from storage.vector_store import similarity_search
@@ -7,10 +7,11 @@ import os
 
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(
-    model = os.getenv("LLM_MODEL", "gemini-2.5-flash"),
-    temperature = 0.3
+model = HuggingFaceEndpoint(
+    repo_id="Qwen/Qwen2.5-7B-Instruct",
+    task="text-generation"
 )
+llm = model = ChatHuggingFace(llm=model,temperature = 0.3)
 
 def timeline_agent(state: AgentState) -> AgentState:
     query = state["query"]
