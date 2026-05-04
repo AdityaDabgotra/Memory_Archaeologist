@@ -58,3 +58,51 @@ def root():
         "status":  "running",
         "version": "1.0.0"
     }
+
+@app.get("/health")
+def health():
+    
+    try:
+        graph = MemoryGraphStore()
+        concepts = graph.get_all_concepts()
+        graph.close()
+        return {
+            "status":         "healthy",
+            "concepts_in_db": len(concepts)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/query",response_model=QueryResponse)
+def query_memories(request: QueryRequest):
+    if not request.query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    try:
+        from agents.graph_pipeline import build_agent_pipeline
+        from agents.state import AgentState
+
+        pipeline = build_agent_pipeline()
+
+        initial_state: AgentState = {
+            "query":           request.query,
+            "intent":          "",
+            "vector_results":  [],
+            "graph_results":   [],
+            "timeline":        [],
+            "contradictions":  [],
+            "abandoned_ideas": [],
+            "final_answer":    "",
+            "reasoning":       "",
+        }
+
+        result = pipeline.invoke(initial_state)
+        return QueryResponse(
+            query=request.query,
+            intent=result["intent"],
+            answer=result["final_answer"],
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
