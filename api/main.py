@@ -106,3 +106,26 @@ def query_memories(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/ingest")
+def ingest_document(request: IngestRequest):
+
+    if not os.path.exists(request.directory):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Directory not found: {request.directory}"
+        )
+    
+    try:
+        docs   = load_directory(request.directory)
+        chunks = list(chunk_documents(docs))
+        build_vector_store(chunks)
+        build_graph(chunks)
+
+        return {
+            "status":       "success",
+            "documents":    len(docs),
+            "chunks":       len(chunks),
+            "directory":    request.directory,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
