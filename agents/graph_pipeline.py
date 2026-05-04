@@ -49,3 +49,26 @@ def build_agent_pipeline() ->StateGraph:
     workflow.add_edge("regret_miner",  END)
 
     return workflow.compile()
+
+
+def ask(query :str) -> str:
+    pipeline = build_agent_pipeline()
+
+    initial_state: AgentState = {
+        "query":           query,
+        "intent":          "",
+        "vector_results":  [],
+        "graph_results":   [],
+        "timeline":        [],
+        "contradictions":  [],
+        "abandoned_ideas": [],
+        "final_answer":    "",
+        "reasoning":       "",
+    }
+
+    print(f"\n{'='*50}")
+    print(f"Query: {query}")
+    print(f"{'='*50}")
+
+    result = pipeline.invoke(initial_state)
+    return result["final_answer"]
