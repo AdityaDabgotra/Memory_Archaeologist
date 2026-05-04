@@ -159,3 +159,39 @@ def concept_timeline(request: ConceptTimelineRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/people/timeline")
+def person_timeline(request: PersonTimelineRequest):
+    """Find all entries mentioning a specific person."""
+    try:
+        graph    = MemoryGraphStore()
+        timeline = graph.get_person_timeline(request.person)
+        graph.close()
+        return {
+            "person":   request.person,
+            "timeline": timeline,
+            "entries":  len(timeline)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/stats")
+def get_stats():
+    """Overview of everything stored in the system."""
+    try:
+        graph    = MemoryGraphStore()
+        concepts = graph.get_all_concepts()
+        graph.close()
+
+        from storage.vector_store import load_vector_store
+        vs            = load_vector_store()
+        vector_count  = vs.index.ntotal
+
+        return {
+            "total_concepts":  len(concepts),
+            "top_concepts":    concepts[:5],
+            "total_vectors":   vector_count,
+            "vector_store":    "loaded"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
