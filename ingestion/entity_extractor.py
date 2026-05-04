@@ -1,4 +1,4 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import HuggingFaceEndpoint,ChatHuggingFace
 from langchain_core.documents import Document
 from dotenv import load_dotenv
 import json
@@ -7,10 +7,11 @@ import os
 
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(
-    model=os.getenv("LLM_MODEL", "gemini-2.5-flash"),
-    temperature=0
+model = HuggingFaceEndpoint(
+    repo_id="Qwen/Qwen2.5-7B-Instruct",
+    task="text-generation"
 )
+llm = model = ChatHuggingFace(llm=model,temperature = 0)
 
 
 def extract_entities(doc: Document, retries: int = 3) -> dict:
