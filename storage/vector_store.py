@@ -16,13 +16,14 @@ def get_embeddings():
 
 
 def build_vector_store(chunks : list[Document]) -> FAISS:
-    print("Embedding chunks (this may take a minute) ...")
+    chunks = list(chunks)
+    print(f"Vector store receiving {len(chunks)} chunks")
+    print("Embedding chunks (this may take a minute)...")
     embeddings = get_embeddings()
-    vector_store = FAISS.from_documents(chunks,embeddings)
-
-    os.makedirs(VECTOR_STORE_PATH,exist_ok=True)
+    vector_store = FAISS.from_documents(chunks, embeddings)
+    os.makedirs(VECTOR_STORE_PATH, exist_ok=True)
     vector_store.save_local(VECTOR_STORE_PATH)
-    print(f"Vector Store saved to {VECTOR_STORE_PATH}")
+    print(f"Vector store saved to {VECTOR_STORE_PATH}")
     return vector_store
 
 

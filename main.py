@@ -16,6 +16,8 @@ def ingest(directory: str = "data/sample"):
     # Phase 2: Load and chunk
     docs   = load_directory(directory)
     chunks = chunk_documents(docs)
+    chunks = list(chunks)
+    print(f"Confirmed chunk count before pipeline: {len(chunks)}")
 
     # Phase 2: Vector store
     build_vector_store(chunks)
@@ -46,6 +48,21 @@ def ingest(directory: str = "data/sample"):
     graph.close()
     print("\nPhase 3 complete! Ready for agents.")
 
+def debug_chunks():
+    from ingestion.loaders import load_directory
+    from ingestion.chunker import chunk_documents
+
+    docs   = load_directory("data/sample")
+    chunks = chunk_documents(docs)
+
+    print(f"\nTotal chunks: {len(chunks)}")
+    for i, chunk in enumerate(chunks):
+        print(f"\n--- Chunk {i+1} ---")
+        print(f"  File: {chunk.metadata.get('filename')}")
+        print(f"  Date: {chunk.metadata.get('date')}")
+        print(f"  Length: {len(chunk.page_content)}")
+        print(f"  Preview: {chunk.page_content[:60]}")
 
 if __name__ == "__main__":
+    debug_chunks()
     ingest()
