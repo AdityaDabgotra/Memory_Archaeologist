@@ -129,3 +129,33 @@ def ingest_document(request: IngestRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/concepts")
+def get_all_concepts():
+    """Return all concepts in the knowledge graph with frequencies."""
+    try:
+        graph    = MemoryGraphStore()
+        concepts = graph.get_all_concepts()
+        graph.close()
+        return {"concepts": concepts, "total": len(concepts)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/concepts/timeline")
+def concept_timeline(request: ConceptTimelineRequest):
+    """Trace how a concept evolved across all your documents."""
+    try:
+        graph    = MemoryGraphStore()
+        timeline = graph.get_concept_timeline(request.concept)
+        graph.close()
+        return {
+            "concept":  request.concept,
+            "timeline": timeline,
+            "entries":  len(timeline)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
