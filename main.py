@@ -10,7 +10,7 @@ from storage.graph_store import MemoryGraphStore
 
 def ingest(directory: str = "data/sample"):
     print(f"\n{'='*50}")
-    print("🏺 Memory Archaeologist — Full Pipeline")
+    print("Memory Archaeologist — Full Pipeline")
     print(f"{'='*50}\n")
 
     # Phase 2: Load and chunk
@@ -24,10 +24,10 @@ def ingest(directory: str = "data/sample"):
     build_graph(chunks)
 
     # Test the graph
-    print("\n📊 Testing graph queries...")
+    print("\nTesting graph queries...")
     graph = MemoryGraphStore()
 
-    print("\n🔍 Concept timeline: 'startup'")
+    print("\nConcept timeline: 'startup'")
     timeline = graph.get_concept_timeline("startup")
     for entry in timeline:
         print(f"  [{entry['date']}] {entry['file']}")
@@ -38,13 +38,13 @@ def ingest(directory: str = "data/sample"):
     for entry in person:
         print(f"  [{entry['date']}] {entry['file']}")
 
-    print("\n🗺️  All concepts in graph:")
+    print("\nAll concepts in graph:")
     concepts = graph.get_all_concepts()
     for c in concepts:
         print(f"  - {c['concept']} (appears {c['frequency']}x)")
 
     graph.close()
-    print("\n✅ Phase 3 complete! Ready for agents.")
+    print("\nPhase 3 complete! Ready for agents.")
 
 
 if __name__ == "__main__":
