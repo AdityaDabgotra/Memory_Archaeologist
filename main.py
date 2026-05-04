@@ -33,7 +33,7 @@ def ingest(directory: str = "data/sample"):
         print(f"  [{entry['date']}] {entry['file']}")
         print(f"   {entry['content'][:100]}...")
 
-    print("\n👤 Person timeline: 'Arjun'")
+    print("\n Person timeline: 'Arjun'")
     person = graph.get_person_timeline("Arjun")
     for entry in person:
         print(f"  [{entry['date']}] {entry['file']}")

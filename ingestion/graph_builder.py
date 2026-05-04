@@ -2,6 +2,7 @@ from langchain_core.documents import Document
 from storage.graph_store import MemoryGraphStore
 from ingestion.entity_extractor import extract_entities
 import hashlib
+import time
 
 def build_chunk_id(doc: Document,index:int) ->str:
     raw = f"{doc.metadata.get('source', '')}_chunk_{index}"
@@ -12,7 +13,7 @@ def build_graph(chunks: list[Document]):
     graph = MemoryGraphStore()
     graph.create_indexes()
     graph.clear_all()
-    
+
     print(f"\nBuilding knowledge graph from {len(chunks)} chunks...")
 
     concept_to_docs = {}
@@ -25,6 +26,7 @@ def build_graph(chunks: list[Document]):
 
         print(f"Extracting entities from chunk {i+1}/{len(chunks)}...")
         entities = extract_entities(chunk)
+        time.sleep(0.5)
 
         for concept in entities.get("concepts", []):
             if concept.strip():
