@@ -49,6 +49,7 @@ For each one:
 - When did they mention it?  
 - Why might it be worth revisiting now?
 - What would be a concrete next step?
+- If the memories has nothing related to concepts just reply with i don't have any memory about this
 
 Be encouraging and specific.
 """

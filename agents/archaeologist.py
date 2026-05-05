@@ -72,6 +72,7 @@ Provide a thoughtful, insightful response that:
 - References specific dates and sources
 - Connects related ideas across time
 - Feels like a wise friend helping them remember, not a search engine
+- If the context has nothing related to query just reply with i don't have any idea about this
 """
 
     response = llm.invoke(synthesis_prompt)

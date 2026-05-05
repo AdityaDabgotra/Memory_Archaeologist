@@ -38,6 +38,8 @@ Identify:
 
 Be specific about dates and be empathetic — changing your mind is growth,
 not failure.
+
+- If the entities has nothing related to query just reply with you dont had any opinion about this topic
 """
     response = llm.invoke(contrast_prompt)
     print(f" Contrast Agent done")
