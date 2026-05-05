@@ -4,7 +4,7 @@ from langchain_community.document_loaders import (
     TextLoader,
     UnstructuredMarkdownLoader
 )
-
+from storage.vector_store import get_ingested_files, mark_as_ingested
 from langchain_core.documents import Document
 from pathlib import Path
 from datetime import datetime
@@ -83,16 +83,24 @@ def load_file(filepath:str)->list[Document]:
     return docs
 
 
-def load_directory(directory:str) -> list[Document]:
+def load_directory(directory: str) -> list[Document]:
     all_docs = []
-    supported_exts = set(LOADER_MAP.keys())
+    supported_exts = set(LOADER_MAP.keys()) | {".txt", ".md"}
+    already_ingested = get_ingested_files()
 
     for path in Path(directory).rglob("*"):
-        if path.suffix.lower() in supported_exts:
-            print(f"Loading {path.name}")
-            docs = load_file(str(path))
+        if path.suffix.lower() not in supported_exts:
+            continue
+        if str(path) in already_ingested:
+            print(f"  Skipping already ingested: {path.name}")
+            continue
+
+        print(f" Loading: {path.name}")
+        docs = load_file(str(path))
+        if docs:
             all_docs.extend(docs)
-    
-    print(f"/nLoaded {len(all_docs)} document pages from {directory}")
+            mark_as_ingested(str(path))  # record it
+
+    print(f"\n Loaded {len(all_docs)} new document pages from {directory}")
 
     return all_docs
