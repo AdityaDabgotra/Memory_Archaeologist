@@ -9,10 +9,11 @@ sentence-transformers
 python-dotenv
 fastapi
 uvicorn
-pypdf
+pymupdf
 python-docx
 tiktoken
 pydantic
 langchain_huggingface
 langchain-google-genai
 google-generativeai
+python-multipart
