@@ -1,263 +1,220 @@
 import { useState, useEffect, useRef } from 'react';
 import { queryMemories, getConcepts, getStats } from './api';
-import KnowledgeGraph from './components/KnowledgeGraph';
-import ChatMessage from './components/ChatMessage';
-import StatsBar from './components/StatsBar';
+import KnowledgeGraph from './components/KnowledgeGraph.jsx';
+import ChatMessage    from './components/ChatMessage.jsx';
+import StatsBar       from './components/StatsBar.jsx';
+
+const SUGGESTIONS = [
+  'What was I thinking about starting a business?',
+  'How did my startup idea evolve over time?',
+  'Have I ever contradicted myself about my career?',
+  'What ideas did I mention but never follow up on?',
+];
 
 export default function App() {
-  const [messages,           setMessages]           = useState([]);
-  const [input,              setInput]              = useState('');
-  const [loading,            setLoading]            = useState(false);
-  const [concepts,           setConcepts]           = useState([]);
-  const [stats,              setStats]              = useState(null);
-  const [highlightedConcept, setHighlightedConcept] = useState(null);
-  const [activeTab,          setActiveTab]          = useState('chat');
-  const messagesEndRef = useRef(null);
+  const [messages,    setMessages]    = useState([]);
+  const [input,       setInput]       = useState('');
+  const [loading,     setLoading]     = useState(false);
+  const [concepts,    setConcepts]    = useState([]);
+  const [stats,       setStats]       = useState(null);
+  const [highlighted, setHighlighted] = useState(null);
+  const [tab,         setTab]         = useState('chat');
+  const bottomRef = useRef(null);
 
-  // Load initial data
   useEffect(() => {
-    getConcepts().then(d => setConcepts(d.concepts)).catch(console.error);
-    getStats().then(setStats).catch(console.error);
+    getConcepts().then(d => setConcepts(d.concepts)).catch(() => {});
+    getStats().then(setStats).catch(() => {});
   }, []);
 
-  // Scroll to bottom on new message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
-  const sendMessage = async () => {
+  const send = async () => {
     if (!input.trim() || loading) return;
-
-    const userMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    const q = input.trim();
+    setMessages(p => [...p, { role: 'user', content: q }]);
     setInput('');
     setLoading(true);
-
     try {
-      const result = await queryMemories(input);
-
-      // Highlight concept mentioned in answer
-      const mentioned = concepts.find(c =>
-        result.answer.toLowerCase().includes(c.concept)
-      );
-      if (mentioned) setHighlightedConcept(mentioned.concept);
-
-      setMessages(prev => [...prev, {
-        role:    'assistant',
-        content: result.answer,
-        intent:  result.intent,
-      }]);
-
-      // Refresh concepts after query
+      const res = await queryMemories(q);
+      const hit = concepts.find(c => res.answer.toLowerCase().includes(c.concept));
+      if (hit) setHighlighted(hit.concept);
+      setMessages(p => [...p, { role: 'assistant', content: res.answer, intent: res.intent }]);
       getConcepts().then(d => setConcepts(d.concepts));
-
-    } catch (err) {
-      setMessages(prev => [...prev, {
-        role:    'assistant',
-        content: '❌ Error connecting to the API. Is the server running?',
-      }]);
+    } catch {
+      setMessages(p => [...p, { role: 'assistant', content: 'Could not reach the API. Make sure the backend is running on port 8000.' }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  const onKey = e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   };
 
-  const suggestions = [
-    'What was I thinking about starting a business?',
-    'How did my startup idea evolve over time?',
-    'Have I contradicted myself about my career?',
-    'What ideas did I abandon and never follow up on?',
-  ];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
 
-      {/* Top bar */}
-      <StatsBar stats={stats} concepts={concepts} />
+      <StatsBar stats={stats} />
 
-      {/* Tab switcher */}
+      {/* Tabs */}
       <div style={{
-        display:      'flex',
-        background:   '#0d0d18',
-        borderBottom: '1px solid #1e1e2e',
-        padding:      '0 20px',
+        display: 'flex', gap: '2px',
+        padding: '0 28px',
+        background: 'var(--surface)',
+        borderBottom: '1px solid var(--border)',
       }}>
-        {['chat', 'graph'].map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{
-            padding:      '10px 20px',
+        {[['chat', '💬 Chat'], ['graph', '🕸 Knowledge Graph']].map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)} style={{
+            padding:      '12px 16px',
             background:   'none',
             border:       'none',
-            borderBottom: activeTab === tab ? '2px solid #7c6af7' : '2px solid transparent',
-            color:        activeTab === tab ? '#a89cf7' : '#5a5a7a',
+            borderBottom: tab === key ? '2px solid var(--accent)' : '2px solid transparent',
+            color:        tab === key ? 'var(--accent)' : 'var(--muted)',
             cursor:       'pointer',
             fontSize:     '13px',
-            textTransform: 'capitalize',
-          }}>
-            {tab === 'chat' ? '💬 Chat' : '🕸️ Knowledge Graph'}
-          </button>
+            fontWeight:   tab === key ? 500 : 400,
+            fontFamily:   'inherit',
+            transition:   'color 0.15s',
+          }}>{label}</button>
         ))}
       </div>
 
-      {/* Main content */}
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+      {/* Content */}
+      <div style={{ flex: 1, overflow: 'hidden' }}>
 
-        {/* Chat tab */}
-        {activeTab === 'chat' && (
-          <div style={{
-            display:       'flex',
-            flexDirection: 'column',
-            height:        '100%',
-          }}>
-            {/* Messages */}
-            <div style={{
-              flex:       1,
-              overflowY:  'auto',
-              padding:    '20px',
-            }}>
+        {/* ── Chat ── */}
+        {tab === 'chat' && (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '28px 10vw' }}>
               {messages.length === 0 && (
-                <div style={{ textAlign: 'center', marginTop: '60px' }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏺</div>
-                  <h2 style={{
-                    color:        '#7c6af7',
+                <div style={{ textAlign: 'center', paddingTop: '80px' }}>
+                  <p style={{
+                    fontFamily: 'Instrument Serif, serif',
+                    fontSize:   '28px',
+                    color:      'var(--text)',
                     marginBottom: '8px',
-                    fontWeight:   500,
                   }}>
-                    Memory Archaeologist
-                  </h2>
-                  <p style={{ color: '#5a5a7a', marginBottom: '32px' }}>
-                    Ask anything about your past thoughts and ideas
+                    What do you want to rediscover?
                   </p>
-                  <div style={{
-                    display:   'flex',
-                    flexWrap:  'wrap',
-                    gap:       '10px',
-                    justifyContent: 'center',
-                    maxWidth:  '600px',
-                    margin:    '0 auto',
-                  }}>
-                    {suggestions.map((s, i) => (
+                  <p style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '36px' }}>
+                    Ask anything about your past thoughts, ideas, and decisions.
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                    {SUGGESTIONS.map((s, i) => (
                       <button key={i} onClick={() => setInput(s)} style={{
                         padding:      '8px 14px',
-                        background:   '#1a1a28',
-                        border:       '1px solid #2a2a3a',
+                        background:   'var(--surface)',
+                        border:       '1px solid var(--border)',
                         borderRadius: '20px',
-                        color:        '#8a8aaa',
+                        color:        'var(--muted)',
                         cursor:       'pointer',
-                        fontSize:     '12px',
-                      }}>
-                        {s}
-                      </button>
+                        fontSize:     '12.5px',
+                        fontFamily:   'inherit',
+                        transition:   'border-color 0.15s, color 0.15s',
+                      }}
+                      onMouseEnter={e => { e.target.style.borderColor = 'var(--accent)'; e.target.style.color = 'var(--accent)'; }}
+                      onMouseLeave={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.color = 'var(--muted)'; }}
+                      >{s}</button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {messages.map((msg, i) => (
-                <ChatMessage key={i} message={msg} />
-              ))}
+              {messages.map((m, i) => <ChatMessage key={i} message={m} />)}
 
               {loading && (
-                <div style={{
-                  display:    'flex',
-                  gap:        '10px',
-                  alignItems: 'center',
-                  color:      '#5a5a7a',
-                  fontSize:   '13px',
-                  padding:    '8px 0',
-                }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{
-                    width:        '32px',
-                    height:       '32px',
-                    borderRadius: '50%',
-                    background:   '#2a1f5e',
-                    border:       '1px solid #4a3a8e',
-                    display:      'flex',
-                    alignItems:   'center',
-                    justifyContent: 'center',
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: 'var(--accent)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '14px',
                   }}>🏺</div>
-                  Excavating memories...
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{
+                        width: '5px', height: '5px',
+                        borderRadius: '50%',
+                        background: 'var(--muted)',
+                        animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                      }} />
+                    ))}
+                  </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
+              <div ref={bottomRef} />
             </div>
 
-            {/* Input area */}
+            {/* Input */}
             <div style={{
-              padding:    '16px 20px',
-              borderTop:  '1px solid #1e1e2e',
-              background: '#0d0d18',
+              padding:    '16px 10vw',
+              background: 'var(--surface)',
+              borderTop:  '1px solid var(--border)',
               display:    'flex',
               gap:        '10px',
             }}>
               <textarea
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about your past thoughts... (Enter to send)"
+                onKeyDown={onKey}
+                placeholder="Ask about your past thoughts…"
                 rows={2}
                 style={{
-                  flex:        1,
-                  padding:     '12px 16px',
-                  background:  '#1a1a28',
-                  border:      '1px solid #2a2a3a',
-                  borderRadius: '12px',
-                  color:       '#e8e6df',
-                  fontSize:    '14px',
-                  resize:      'none',
-                  outline:     'none',
-                  fontFamily:  'inherit',
+                  flex:         1,
+                  padding:      '12px 16px',
+                  background:   'var(--bg)',
+                  border:       '1px solid var(--border)',
+                  borderRadius: 'var(--radius)',
+                  color:        'var(--text)',
+                  fontSize:     '14px',
+                  fontFamily:   'inherit',
+                  resize:       'none',
+                  outline:      'none',
+                  lineHeight:   '1.6',
+                  transition:   'border-color 0.15s',
                 }}
+                onFocus={e  => e.target.style.borderColor = 'var(--accent)'}
+                onBlur={e   => e.target.style.borderColor = 'var(--border)'}
               />
-              <button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                style={{
-                  padding:      '12px 20px',
-                  background:   loading || !input.trim() ? '#1a1a28' : '#2d1f6e',
-                  border:       '1px solid #4a3a8e',
-                  borderRadius: '12px',
-                  color:        loading || !input.trim() ? '#4a4a6a' : '#a89cf7',
-                  cursor:       loading || !input.trim() ? 'not-allowed' : 'pointer',
-                  fontSize:     '20px',
-                  transition:   'all 0.2s',
-                }}
-              >
-                ↑
-              </button>
+              <button onClick={send} disabled={loading || !input.trim()} style={{
+                padding:      '0 20px',
+                background:   loading || !input.trim() ? 'var(--border)' : 'var(--accent)',
+                border:       'none',
+                borderRadius: 'var(--radius)',
+                color:        loading || !input.trim() ? 'var(--muted)' : '#FFFFFF',
+                cursor:       loading || !input.trim() ? 'not-allowed' : 'pointer',
+                fontSize:     '18px',
+                transition:   'background 0.15s',
+              }}>↑</button>
             </div>
           </div>
         )}
 
-        {/* Graph tab */}
-        {activeTab === 'graph' && (
-          <div style={{ height: '100%', padding: '20px' }}>
+        {/* ── Graph ── */}
+        {tab === 'graph' && (
+          <div style={{ height: '100%', padding: '24px', background: 'var(--bg)' }}>
             <div style={{
               height:       '100%',
-              background:   '#0d0d18',
-              borderRadius: '12px',
-              border:       '1px solid #1e1e2e',
+              background:   'var(--surface)',
+              borderRadius: '16px',
+              border:       '1px solid var(--border)',
               overflow:     'hidden',
             }}>
               {concepts.length > 0
-                ? <KnowledgeGraph
-                    concepts={concepts}
-                    highlightedConcept={highlightedConcept}
-                  />
+                ? <KnowledgeGraph concepts={concepts} highlightedConcept={highlighted} />
                 : (
                   <div style={{
-                    display:        'flex',
-                    alignItems:     'center',
-                    justifyContent: 'center',
-                    height:         '100%',
-                    color:          '#3a3a5a',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    height: '100%', gap: '8px',
                   }}>
-                    No concepts in graph yet. Ingest some documents first.
+                    <span style={{ fontSize: '32px' }}>🕸</span>
+                    <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
+                      No concepts yet — ingest some documents first.
+                    </p>
                   </div>
                 )
               }
@@ -265,6 +222,13 @@ export default function App() {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.8); }
+          50%       { opacity: 1;   transform: scale(1.1); }
+        }
+      `}</style>
     </div>
   );
 }

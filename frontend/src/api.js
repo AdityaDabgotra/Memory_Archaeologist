@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BASE = process.env.REACT_APP_BACKEND_URL;
+// const BASE = process.env.REACT_APP_BACKEND_URL;
+const BASE = 'http://localhost:8000';
 
 export const queryMemories = async (query) => {
   const res = await axios.post(`${BASE}/query`, { query });
