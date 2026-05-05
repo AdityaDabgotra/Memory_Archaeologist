@@ -8,6 +8,7 @@ import pickle
 load_dotenv()
 
 VECTOR_STORE_PATH = "data/vector_store"
+INGESTED_LOG = "data/ingested_files.txt"
 
 def get_embeddings():
     return HuggingFaceEmbeddings(
@@ -65,3 +66,18 @@ def similarity_search(query: str ,k:int = 5, filters: dict = None):
         )
     
     return results
+
+
+def get_ingested_files() -> set:
+    """Return set of already-ingested file paths."""
+    if not os.path.exists(INGESTED_LOG):
+        return set()
+    with open(INGESTED_LOG, "r") as f:
+        return set(line.strip() for line in f.readlines())
+
+
+def mark_as_ingested(filepath: str):
+    """Record that a file has been ingested."""
+    os.makedirs("data", exist_ok=True)
+    with open(INGESTED_LOG, "a") as f:
+        f.write(filepath + "\n")
