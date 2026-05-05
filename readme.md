@@ -163,14 +163,14 @@ pip install -r requirements.txt
 Create a `.env` file in the root:
 
 ```env
-OPENAI_API_KEY=sk-your-key-here
 
 NEO4J_URI=neo4j+s://xxxxxxxx.databases.neo4j.io
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=your-password-here
 
 EMBEDDING_MODEL=text-embedding-3-small
-LLM_MODEL=gpt-4o-mini
+
+HUGGINGFACEHUB_ACCESS_TOKEN = your-huggingface-token-if-needed
 ```
 
 ### 3. Add your documents
