@@ -16,7 +16,6 @@ def build_graph(chunks: list[Document]):
 
     graph = MemoryGraphStore()
     graph.create_indexes()
-    graph.clear_all()
 
     print(f"\nBuilding knowledge graph from {len(chunks)} chunks...")
 
