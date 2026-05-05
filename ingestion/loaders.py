@@ -33,6 +33,13 @@ def infer_date_from_path(filepath:str)->str:
     if match:
         return match.group(1) + "-01-01"
     
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read(500)  # read first 500 chars only
+        return extract_date_from_content(content)
+    except:
+        pass
+    
     mod_time = os.path.getmtime(filepath)
     return datetime.fromtimestamp(mod_time).strftime("%Y-%m-%d")
 
@@ -104,3 +111,61 @@ def load_directory(directory: str) -> list[Document]:
     print(f"\n Loaded {len(all_docs)} new document pages from {directory}")
 
     return all_docs
+
+def extract_date_from_content(content: str) -> str:
+    
+    import re
+
+    # Try regex on content first
+    match = re.search(r"(\d{4}[-/]\d{2}[-/]\d{2})", content)
+    if match:
+        return match.group(1).replace("/", "-")
+
+    # Try natural language dates in content
+    month_map = {
+        "january":"01","february":"02","march":"03","april":"04",
+        "may":"05","june":"06","july":"07","august":"08",
+        "september":"09","october":"10","november":"11","december":"12",
+        "jan":"01","feb":"02","mar":"03","apr":"04","jun":"06",
+        "jul":"07","aug":"08","sep":"09","oct":"10","nov":"11","dec":"12",
+    }
+    pattern = re.search(
+        r"(january|february|march|april|may|june|july|august|september|"
+        r"october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)"
+        r"\s+(\d{1,2}),?\s+(\d{4})",
+        content.lower()
+    )
+    if pattern:
+        month = month_map[pattern.group(1)]
+        day   = pattern.group(2).zfill(2)
+        year  = pattern.group(3)
+        return f"{year}-{month}-{day}"
+
+    # LLM fallback for messy formats
+    try:
+        from langchain_huggingface import ChatHuggingFace,HuggingFaceEndpoint
+        from dotenv import load_dotenv
+        import os
+        load_dotenv()
+        model = HuggingFaceEndpoint(
+            repo_id="Qwen/Qwen2.5-7B-Instruct",
+            task="text-generation"
+        )
+        llm = model = ChatHuggingFace(llm=model)
+        
+        response = llm.invoke(
+            f"""Extract the date from this document excerpt.
+Return ONLY a date in YYYY-MM-DD format. If no date found, return 'unknown'.
+Do not explain. Just the date.
+
+Document:
+\"\"\"{content[:300]}\"\"\"
+"""
+        )
+        result = response.content.strip()
+        if re.match(r"\d{4}-\d{2}-\d{2}", result):
+            return result
+    except:
+        pass
+
+    return datetime.now().strftime("%Y-%m-%d")
