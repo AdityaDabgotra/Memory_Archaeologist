@@ -11,6 +11,7 @@ fastapi
 uvicorn
 pymupdf
 python-docx
+docx2txt
 tiktoken
 pydantic
 langchain_huggingface
