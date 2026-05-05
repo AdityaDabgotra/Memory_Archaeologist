@@ -20,11 +20,26 @@ def build_vector_store(chunks : list[Document]) -> FAISS:
     print(f"Vector store receiving {len(chunks)} chunks")
     print("Embedding chunks (this may take a minute)...")
     embeddings = get_embeddings()
-    vector_store = FAISS.from_documents(chunks, embeddings)
     os.makedirs(VECTOR_STORE_PATH, exist_ok=True)
-    vector_store.save_local(VECTOR_STORE_PATH)
-    print(f"Vector store saved to {VECTOR_STORE_PATH}")
-    return vector_store
+
+    if os.path.exists(f"{VECTOR_STORE_PATH}/index.faiss"):
+        print(" Existing vector store found — merging new chunks...")
+        existing = FAISS.load_local(
+            VECTOR_STORE_PATH,
+            embeddings,
+            allow_dangerous_deserialization=True
+        )
+        new_store = FAISS.from_documents(chunks, embeddings)
+        existing.merge_from(new_store)
+        existing.save_local(VECTOR_STORE_PATH)
+        print(f" Merged {len(chunks)} new chunks into existing store")
+        return existing
+    else:
+        print(" Creating new vector store...")
+        store = FAISS.from_documents(chunks, embeddings)
+        store.save_local(VECTOR_STORE_PATH)
+        print(f" Vector store saved with {len(chunks)} chunks")
+        return store
 
 
 def load_vector_store() -> FAISS:
