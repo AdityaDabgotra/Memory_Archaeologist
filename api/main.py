@@ -233,7 +233,7 @@ async def upload_and_ingest(file: UploadFile = File(...)):
             "status":   "ingested",
             "filename": file.filename,
             "chunks":   len(chunks),
-            "concepts": len(chunks) * 3,  # approximate
+            "dates_found": list(set(c.metadata.get("date","unknown") for c in chunks)),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
