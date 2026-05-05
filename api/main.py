@@ -9,8 +9,8 @@ from ingestion.chunker import chunk_documents
 from storage.vector_store import build_vector_store
 from ingestion.graph_builder import build_graph
 from dotenv import load_dotenv
-import asyncio
-import json
+from fastapi import UploadFile, File
+import shutil
 import os
 
 load_dotenv()
@@ -192,6 +192,48 @@ def get_stats():
             "top_concepts":    concepts[:5],
             "total_vectors":   vector_count,
             "vector_store":    "loaded"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/upload")
+async def upload_and_ingest(file: UploadFile = File(...)):
+    allowed = {".txt", ".md", ".pdf", ".docx"}
+    ext = os.path.splitext(file.filename)[1].lower()
+
+    if ext not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type {ext} not supported. Use: {allowed}"
+        )
+
+    # Save uploaded file to data/uploads/
+    upload_dir = "data/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    save_path = os.path.join(upload_dir, file.filename)
+
+    with open(save_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    print(f" Saved uploaded file: {save_path}")
+
+    # Ingest immediately
+    try:
+        from ingestion.loaders import load_file
+        docs   = load_file(save_path)
+        if not docs:
+            raise HTTPException(status_code=400, detail="File was empty or could not be parsed")
+
+        chunks = list(chunk_documents(docs))
+        build_vector_store(chunks)
+        build_graph(chunks)
+
+        return {
+            "status":   "ingested",
+            "filename": file.filename,
+            "chunks":   len(chunks),
+            "concepts": len(chunks) * 3,  # approximate
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
