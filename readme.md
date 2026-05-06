@@ -142,7 +142,7 @@ memory-archaeologist/
 
 - Python 3.10+
 - Node.js 18+
-- OpenAI API key
+- Hugging Face Access Token
 - [Neo4j AuraDB](https://neo4j.com/cloud/aura/) free account
 
 ### 1. Clone and install
