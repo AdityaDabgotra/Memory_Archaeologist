@@ -273,14 +273,14 @@ When a file has no date in its name, the system tries five fallback strategies i
 
 | Layer | Technology |
 |---|---|
-| LLM | OpenAI GPT-4o-mini |
+| LLM | Hugging Face Open source Models |
 | Orchestration | LangChain 0.2 + LangGraph |
 | Vector Store | FAISS (local, no server needed) |
 | Knowledge Graph | Neo4j AuraDB (free cloud tier) |
 | Embeddings | OpenAI text-embedding-3-small |
 | Backend | FastAPI + Uvicorn |
 | Frontend | React 18 + D3.js |
-| File Parsing | PyPDF, python-docx, LangChain loaders |
+| File Parsing | PyMuPDF, python-docx, LangChain loaders |
 
 ---
 
@@ -336,6 +336,6 @@ MIT 2024
 
 Built with LangChain · LangGraph · Neo4j · FastAPI · React
 
-**[Star this repo](https://github.com/yourusername/memory-archaeologist)** if it helped you rediscover something worth keeping.
+**[Star this repo](https://github.com/AdityaDabgotra/Memory_Archaeologist)** if it helped you rediscover something worth keeping.
 
 </div>
