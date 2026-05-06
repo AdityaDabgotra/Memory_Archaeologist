@@ -148,8 +148,8 @@ memory-archaeologist/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/yourusername/memory-archaeologist.git
-cd memory-archaeologist
+git clone https://github.com/AdityaDabgotra/Memory_Archaeologist.git
+cd Memory_Archaeologist
 
 python -m venv venv
 venv\Scripts\activate        # Windows
